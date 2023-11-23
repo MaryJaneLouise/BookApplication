@@ -22,9 +22,19 @@ class RealmDatabase {
         Realm.open(configuration)
     }
 
-    // Gets the list of the books
+    // Gets the list of the books without the favorite and archived
     fun getAllBooks(): List<BookRealm> {
-        return realm.query<BookRealm>().find()
+        return realm.query<BookRealm>("isFavorite == false AND archived == false").find()
+    }
+
+    // Gets the list of the favorite books
+    fun getAllBooksFavorite(): List<BookRealm> {
+        return realm.query<BookRealm>("isFavorite == true").find()
+    }
+
+    // Gets the list of the favorite books
+    fun getAllBooksArchived(): List<BookRealm> {
+        return realm.query<BookRealm>("archived == true").find()
     }
 
     // Search query for the books
@@ -45,7 +55,11 @@ class RealmDatabase {
                     this.bookName = bookName
                     this.dateBookPublished = datePublished
                     this.dateAdded = LocalDate.now().toEpochDay()
+                    this.dateModified = LocalDate.now().toEpochDay()
+                    this.pagesRead = 0
                     this.pages = pages
+                    this.isFavorite = false
+                    this.archived = false
                 }
                 copyToRealm(book)
             }
@@ -60,6 +74,45 @@ class RealmDatabase {
 
                 if (book != null) {
                     findLatest(book)?.isFavorite = true
+                }
+            }
+        }
+    }
+
+    // Unfavorite the book
+    suspend fun unFavoriteBook(id: ObjectId) {
+        withContext(Dispatchers.IO) {
+            realm.write {
+                val book = realm.query<BookRealm>("id == $0", id).first().find()
+
+                if (book != null) {
+                    findLatest(book)?.isFavorite = false
+                }
+            }
+        }
+    }
+
+    // Archive the book
+    suspend fun archiveBook(id: ObjectId) {
+        withContext(Dispatchers.IO) {
+            realm.write {
+                val book = realm.query<BookRealm>("id == $0", id).first().find()
+
+                if (book != null) {
+                    findLatest(book)?.archived = true
+                }
+            }
+        }
+    }
+
+    // Unarchive the book
+    suspend fun unArchiveBook(id: ObjectId) {
+        withContext(Dispatchers.IO) {
+            realm.write {
+                val book = realm.query<BookRealm>("id == $0", id).first().find()
+
+                if (book != null) {
+                    findLatest(book)?.archived = false
                 }
             }
         }
@@ -85,25 +138,33 @@ class RealmDatabase {
                         this.bookName = bookName
                         this.dateBookPublished = datePublished
                         this.pages = pages
+                        this.dateModified = LocalDate.now().toEpochDay()
                     }
                 }
             }
         }
     }
 
-    // Archive the book
-    suspend fun archiveBook(id: ObjectId) {
+    // Update the book status
+    suspend fun updateBookStatus(book: Book, pagesRead: Int) {
         withContext(Dispatchers.IO) {
             realm.write {
-                val book = realm.query<BookRealm>("id == $0", id).first().find()
+                val book: BookRealm? = realm.query<BookRealm>("id == $0", ObjectId(book.id)).first().find()
 
                 if (book != null) {
-                    findLatest(book)?.archived = true
+                    val bookRealm = findLatest(book)
+
+                    // Update the data
+                    bookRealm?.apply {
+                        this.pagesRead = pagesRead
+                        this.dateModified = LocalDate.now().toEpochDay()
+                    }
                 }
             }
         }
     }
 
+    // Delete the book permanently
     suspend fun deleteBook(id: ObjectId) {
         withContext(Dispatchers.IO) {
             realm.write {

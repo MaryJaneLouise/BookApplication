@@ -15,6 +15,7 @@ import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.RecyclerView
 import com.mariejuana.bookapplication.R
 import com.mariejuana.bookapplication.databinding.ContentBooksBinding
+import com.mariejuana.bookapplication.databinding.ContentBooksFaveBinding
 import com.mariejuana.bookapplication.databinding.DialogEditBookBinding
 import com.mariejuana.bookapplication.databinding.DialogEditBookReadBinding
 import com.mariejuana.bookapplication.models.Book
@@ -22,13 +23,13 @@ import com.mariejuana.bookapplication.realm.RealmDatabase
 import java.util.Calendar
 import java.util.Locale
 
-class BookAdapter(private var bookList: ArrayList<Book>, private var context: Context, var bookAdapterCallback: BookAdapterInterface): RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
+class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var context: Context, var bookFaveAdapterCallback: BookFaveAdapterInterface): RecyclerView.Adapter<FavoriteBookAdapter.BookViewHolder>() {
     private var database = RealmDatabase()
     private val calendar = Calendar.getInstance()
 
-    interface BookAdapterInterface {
+    interface BookFaveAdapterInterface {
 
-        fun faveBook(id: String)
+        fun unFaveBook(id: String)
 
         fun updateBook(book: Book, author: String, bookName: String, datePublished: String, pages: Int)
 
@@ -37,7 +38,7 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
         fun updateBookStatus(book: Book, pagesRead: Int)
     }
 
-    inner class BookViewHolder(val binding: ContentBooksBinding): RecyclerView.ViewHolder(binding.root) {
+    inner class BookViewHolder(val binding: ContentBooksFaveBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(itemData: Book) {
             with(binding) {
                 val percentage = (itemData.pagesRead.toString().toDouble() / itemData.pages.toString().toDouble()) * 100
@@ -46,9 +47,8 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
                 txtBookAuthor.text = String.format("%s", itemData.author)
                 txtBookPagesRead.text = "Page ${itemData.pagesRead} of ${itemData.pages} (${String.format("%.2f", percentage.toString().toDouble())}%)"
 
-                txtBookDatePublished.visibility = View.GONE
                 txtBookDatePublished.text = String.format("Published on %s", itemData.dateBookPublished)
-                txtBookDateModified.visibility = View.GONE
+                txtBookDatePublished.visibility = View.GONE
 
 //                if (itemData.dateAdded != itemData.dateModified) {
 //                    txtBookDateModified.visibility = View.VISIBLE
@@ -56,16 +56,16 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
 //                }
 
 
-                // Places the book into favorites
-                btnFave.setOnClickListener {
+                // Removes the book into favorites
+                btnUnfave.setOnClickListener {
                     val builder = androidx.appcompat.app.AlertDialog.Builder(context)
-                    builder.setMessage("Are you sure you want to add this book to the favorites?")
+                    builder.setMessage("Are you sure you want to remove this book to the favorites?")
                     builder.setTitle("Warning!")
                     builder.setPositiveButton("Yes") { dialog, _ ->
                         bookList.removeAt(adapterPosition)
                         notifyItemRemoved(adapterPosition)
-                        bookAdapterCallback.faveBook(itemData.id)
-                        Toast.makeText(context, "The selected book has been placed in favorites.", Toast.LENGTH_SHORT).show()
+                        bookFaveAdapterCallback.unFaveBook(itemData.id)
+                        Toast.makeText(context, "The selected book has been removed in favorites.", Toast.LENGTH_SHORT).show()
                         dialog.dismiss()
                     }
                     builder.setNegativeButton("No") { dialog, _ ->
@@ -76,7 +76,6 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
 
                 // Edits the details of the book
                 btnEditBook.setOnClickListener {
-                    Log.d("any", "doesn't work")
                     val builder = AlertDialog.Builder(context)
                     val inflater = LayoutInflater.from(context)
                     val view = inflater.inflate(R.layout.dialog_edit_book, null)
@@ -127,7 +126,7 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
                             Toast.makeText(context, "Book details has been updated unsuccessfully. Please check again.", Toast.LENGTH_SHORT).show()
                             dialog.cancel()
                         } else {
-                            bookAdapterCallback.updateBook(itemData, newAuthor, newTitle, newDatePublished, newPages.toInt())
+                            bookFaveAdapterCallback.updateBook(itemData, newAuthor, newTitle, newDatePublished, newPages.toInt())
                             Toast.makeText(context, "Book details has been updated.", Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
@@ -136,7 +135,6 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
                         dialog.dismiss()
                     }
                     builder.show()
-
                 }
 
                 // Archives the book
@@ -147,7 +145,7 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
                     builder.setPositiveButton("Yes") { dialog, _ ->
                         bookList.removeAt(adapterPosition)
                         notifyItemRemoved(adapterPosition)
-                        bookAdapterCallback.archiveBook(itemData.id)
+                        bookFaveAdapterCallback.archiveBook(itemData.id)
                         Toast.makeText(context, "The selected book has been archived.", Toast.LENGTH_SHORT).show()
                         dialog.dismiss()
                     }
@@ -178,7 +176,7 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
                             Toast.makeText(context, "Book page read has been updated unsuccessfully. Please check again.", Toast.LENGTH_SHORT).show()
                             dialog.cancel()
                         } else {
-                            bookAdapterCallback.updateBookStatus(itemData, newPage)
+                            bookFaveAdapterCallback.updateBookStatus(itemData, newPage)
                             Toast.makeText(context, "Book page read has been updated.", Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
@@ -193,7 +191,7 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookViewHolder {
-        val binding = ContentBooksBinding.inflate(LayoutInflater.from(parent.context),parent,false)
+        val binding = ContentBooksFaveBinding.inflate(LayoutInflater.from(parent.context),parent,false)
         return BookViewHolder(binding)
     }
 
@@ -211,31 +209,5 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
         notifyDataSetChanged()
         this.bookList = bookList
         this.notifyItemInserted(this.bookList.size)
-    }
-
-    fun showDatePicker() {
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.dialog_edit_book, null)
-        val bindingEdit = DialogEditBookBinding.bind(view)
-
-        val datePickerDialog = DatePickerDialog(
-            context, { DatePicker, year: Int, monthOfYear: Int, dayOfMonth: Int ->
-                // Create a new Calendar instance to hold the selected date
-                val selectedDate = Calendar.getInstance()
-                // Set the selected date using the values received from the DatePicker dialog
-                selectedDate.set(year, monthOfYear, dayOfMonth)
-                // Create a SimpleDateFormat to format the date as "dd/MM/yyyy"
-                val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                // Format the selected date into a string
-                val formattedDate = dateFormat.format(selectedDate.time)
-                // Update the TextView to display the selected date with the "Selected Date: " prefix
-                bindingEdit.editBookTitleDatePublished.setText(formattedDate)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        // Show the DatePicker dialog
-        datePickerDialog.show()
     }
 }

@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mongodb.kbson.BsonObjectId
 
-class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, BookAdapter.BooktAdapterInterface {
+class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, BookAdapter.BookAdapterInterface {
     private lateinit var binding: ActivityBooksBinding
     private lateinit var bookList: ArrayList<Book>
     private lateinit var adapter: BookAdapter
@@ -143,7 +143,7 @@ class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, B
                         val deletedBook: Book = bookList[viewHolder.adapterPosition]
                         bookList.removeAt(viewHolder.adapterPosition)
                         adapter.notifyItemRemoved(viewHolder.adapterPosition)
-                        adapter.bookAdapterCallback.deleteBook(deletedBook.id)
+                        adapter.bookAdapterCallback.archiveBook(deletedBook.id)
                         Toast.makeText(this@BooksActivity, "The swiped book has been archived.", Toast.LENGTH_SHORT).show()
                     }
                     builder.setNegativeButton("No") {dialog, _ ->
@@ -165,14 +165,38 @@ class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, B
         getBooks()
     }
 
-    override fun deleteBook(id: String) {
-        TODO("Not yet implemented")
-    }
     override fun archiveBook(id: String) {
         val coroutineContext = Job() + Dispatchers.IO
         val scope = CoroutineScope(coroutineContext + CoroutineName("archiveBook"))
         scope.launch(Dispatchers.IO) {
             database.archiveBook(BsonObjectId(id))
+            getBooks()
+        }
+    }
+
+    override fun faveBook(id: String) {
+        val coroutineContext = Job() + Dispatchers.IO
+        val scope = CoroutineScope(coroutineContext + CoroutineName("faveBook"))
+        scope.launch(Dispatchers.IO) {
+            database.favoriteBook(BsonObjectId(id))
+            getBooks()
+        }
+    }
+
+    override fun updateBook(book: Book, author: String, bookName: String, datePublished: String, pages: Int) {
+        val coroutineContext = Job() + Dispatchers.IO
+        val scope = CoroutineScope(coroutineContext + CoroutineName("updateBook"))
+        scope.launch(Dispatchers.IO) {
+            database.updateBook(book, author, bookName, datePublished, pages)
+            getBooks()
+        }
+    }
+
+    override fun updateBookStatus(book: Book, pagesRead: Int) {
+        val coroutineContext = Job() + Dispatchers.IO
+        val scope = CoroutineScope(coroutineContext + CoroutineName("updateBookStatus"))
+        scope.launch(Dispatchers.IO) {
+            database.updateBookStatus(book, pagesRead)
             getBooks()
         }
     }

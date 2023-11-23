@@ -59,16 +59,16 @@
                         android:text="Made by MaryJane Salsalani"/>
 
                     <TextView
+                        android:id="@+id/txt_book_pages_read"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Page 69 of 96 (71.88% done)"/>
+
+                    <TextView
                         android:id="@+id/txt_book_date_published"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="June 9, 1969"/>
-
-                    <TextView
-                        android:id="@+id/txt_book_pages"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="69 pages"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -78,13 +78,22 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/btn_fave"
+                    android:id="@+id/btn_unfave"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="5dp"
                     android:layout_marginEnd="5dp"
                     android:text="Unfave" />
+
+                <Button
+                    android:id="@+id/btn_edit_book"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Edit" />
 
                 <Button
                     android:id="@+id/btn_remove"
@@ -97,6 +106,15 @@
                     android:text="Remove" />
 
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_update_pages_read"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:text="Update pages read" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>
