@@ -29,21 +29,21 @@ class RealmDatabase {
 
     // Search query for the books
     fun getBooksByName(name: String): List<BookRealm> {
-        return realm.query<BookRealm>("name CONTAINS[c] $0", name).find()
+        return realm.query<BookRealm>("bookName CONTAINS[c] $0", name).find()
     }
 
     // Adds the book in the database
     suspend fun addBook(
         author: String,
         bookName: String,
-        datePublished: LocalDate,
+        datePublished: String,
         pages: Int) {
         withContext(Dispatchers.IO) {
             realm.write {
                 val book = BookRealm().apply {
                     this.author = author
                     this.bookName = bookName
-                    this.dateBookPublished = datePublished.toEpochDay()
+                    this.dateBookPublished = datePublished
                     this.dateAdded = LocalDate.now().toEpochDay()
                     this.pages = pages
                 }
@@ -70,7 +70,7 @@ class RealmDatabase {
         book: Book,
         author: String,
         bookName: String,
-        datePublished: LocalDate,
+        datePublished: String,
         pages: Int) {
         withContext(Dispatchers.IO) {
             realm.write {
@@ -83,7 +83,7 @@ class RealmDatabase {
                     bookRealm?.apply {
                         this.author = author
                         this.bookName = bookName
-                        this.dateBookPublished = datePublished.toEpochDay()
+                        this.dateBookPublished = datePublished
                         this.pages = pages
                     }
                 }

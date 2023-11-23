@@ -1,7 +1,8 @@
-package com.mariejuana.bookapplication
+package com.mariejuana.bookapplication.screens
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.mariejuana.bookapplication.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
