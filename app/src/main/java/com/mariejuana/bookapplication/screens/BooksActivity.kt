@@ -159,6 +159,18 @@ class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, B
     override fun onResume() {
         super.onResume()
         getBooks()
+
+        binding.idFabAdd.hide()
+        binding.idFabArchive.hide()
+        binding.idFabFavorites.hide()
+
+        binding.idFabAdd.visibility = View.GONE
+        binding.idFabArchive.visibility = View.GONE
+        binding.idFabFavorites.visibility = View.GONE
+
+        binding.idFabOptions.setImageDrawable(resources.getDrawable(R.drawable.ic_options))
+
+        fabVisible = false
     }
 
     override fun refreshData() {
@@ -183,20 +195,26 @@ class BooksActivity : AppCompatActivity(), AddBookDialog.RefreshDataInterface, B
         }
     }
 
-    override fun updateBook(book: Book, author: String, bookName: String, datePublished: String, pages: Int) {
+    override fun updateBook(
+        book: Book,
+        author: String,
+        bookName: String,
+        datePublished: String,
+        dateModified: String,
+        pages: Int) {
         val coroutineContext = Job() + Dispatchers.IO
         val scope = CoroutineScope(coroutineContext + CoroutineName("updateBook"))
         scope.launch(Dispatchers.IO) {
-            database.updateBook(book, author, bookName, datePublished, pages)
+            database.updateBook(book, author, bookName, datePublished, dateModified, pages)
             getBooks()
         }
     }
 
-    override fun updateBookStatus(book: Book, pagesRead: Int) {
+    override fun updateBookStatus(book: Book, dateModified: String, pagesRead: Int) {
         val coroutineContext = Job() + Dispatchers.IO
         val scope = CoroutineScope(coroutineContext + CoroutineName("updateBookStatus"))
         scope.launch(Dispatchers.IO) {
-            database.updateBookStatus(book, pagesRead)
+            database.updateBookStatus(book, dateModified, pagesRead)
             getBooks()
         }
     }

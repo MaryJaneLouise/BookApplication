@@ -18,24 +18,30 @@ import com.mariejuana.bookapplication.databinding.ContentBooksBinding
 import com.mariejuana.bookapplication.databinding.ContentBooksFaveBinding
 import com.mariejuana.bookapplication.databinding.DialogEditBookBinding
 import com.mariejuana.bookapplication.databinding.DialogEditBookReadBinding
+import com.mariejuana.bookapplication.databinding.DialogShowDetailsBookBinding
+import com.mariejuana.bookapplication.helpers.TypeConverter
 import com.mariejuana.bookapplication.models.Book
 import com.mariejuana.bookapplication.realm.RealmDatabase
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Locale
 
 class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var context: Context, var bookFaveAdapterCallback: BookFaveAdapterInterface): RecyclerView.Adapter<FavoriteBookAdapter.BookViewHolder>() {
     private var database = RealmDatabase()
     private val calendar = Calendar.getInstance()
+    private val typeConverter = TypeConverter()
+    private var buttonVisible = false
 
     interface BookFaveAdapterInterface {
 
         fun unFaveBook(id: String)
 
-        fun updateBook(book: Book, author: String, bookName: String, datePublished: String, pages: Int)
+        fun updateBook(book: Book, author: String, bookName: String, datePublished: String, dateModified: String, pages: Int)
 
         fun archiveBook(id: String)
 
-        fun updateBookStatus(book: Book, pagesRead: Int)
+        fun updateBookStatus(book: Book, dateModified: String, pagesRead: Int)
     }
 
     inner class BookViewHolder(val binding: ContentBooksFaveBinding): RecyclerView.ViewHolder(binding.root) {
@@ -43,18 +49,31 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
             with(binding) {
                 val percentage = (itemData.pagesRead.toString().toDouble() / itemData.pages.toString().toDouble()) * 100
 
+                val convertedDateAdded = typeConverter.toFormattedDateTimeString(itemData.dateAdded)
+                val convertedDateModified = typeConverter.toFormattedDateTimeString(itemData.dateModified)
+
+                buttonVisible = false
+
                 txtBookName.text = String.format("%s", itemData.bookName)
                 txtBookAuthor.text = String.format("%s", itemData.author)
                 txtBookPagesRead.text = "Page ${itemData.pagesRead} of ${itemData.pages} (${String.format("%.2f", percentage.toString().toDouble())}%)"
 
-                txtBookDatePublished.text = String.format("Published on %s", itemData.dateBookPublished)
-                txtBookDatePublished.visibility = View.GONE
+                btnSeeDetails.visibility = View.GONE
+                btnUpdateArchive.visibility = View.GONE
 
-//                if (itemData.dateAdded != itemData.dateModified) {
-//                    txtBookDateModified.visibility = View.VISIBLE
-//                    txtBookDateModified.text = String.format("%s", itemData.dateModified)
-//                }
+                cvForecast.setOnClickListener {
+                    if (!buttonVisible) {
+                        btnSeeDetails.visibility = View.VISIBLE
+                        btnUpdateArchive.visibility = View.VISIBLE
 
+                        buttonVisible = true
+                    } else {
+                        btnSeeDetails.visibility = View.GONE
+                        btnUpdateArchive.visibility = View.GONE
+
+                        buttonVisible = false
+                    }
+                }
 
                 // Removes the book into favorites
                 btnUnfave.setOnClickListener {
@@ -87,7 +106,9 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
                     val inputAuthor = bindingEdit.editBookTitleAuthor
                     val inputPages = bindingEdit.editBookTitlePages
                     val inputDatePublished = bindingEdit.editBookTitleDatePublished
+                    val inoutDateModified = LocalDateTime.now()
                     val buttonCalendar = bindingEdit.editBookTitleDatePublishedButton
+                    Log.d("tag", inoutDateModified.toString())
 
                     inputTitle.setText("${itemData.bookName}")
                     inputAuthor.setText("${itemData.author}")
@@ -108,6 +129,7 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
                             calendar.get(Calendar.MONTH),
                             calendar.get(Calendar.DAY_OF_MONTH)
                         )
+                        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
                         datePickerDialog.show()
                     }
 
@@ -118,6 +140,7 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
                         val newAuthor = inputAuthor.text.toString()
                         val newPages = inputPages.text.toString()
                         val newDatePublished = inputDatePublished.text.toString()
+                        val newDateModified = inoutDateModified.toString()
 
                         if ((newTitle.isNullOrEmpty() && newTitle.isNullOrEmpty()) ||
                             (newAuthor.isNullOrEmpty() && newAuthor.isNullOrBlank()) ||
@@ -126,7 +149,7 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
                             Toast.makeText(context, "Book details has been updated unsuccessfully. Please check again.", Toast.LENGTH_SHORT).show()
                             dialog.cancel()
                         } else {
-                            bookFaveAdapterCallback.updateBook(itemData, newAuthor, newTitle, newDatePublished, newPages.toInt())
+                            bookFaveAdapterCallback.updateBook(itemData, newAuthor, newTitle, newDatePublished, newDateModified, newPages.toInt())
                             Toast.makeText(context, "Book details has been updated.", Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
@@ -165,23 +188,57 @@ class FavoriteBookAdapter(private var bookList: ArrayList<Book>, private var con
                     builder.setView(view)
 
                     val inputPageRead = bindingEdit.editBookTitlePageRead
+                    val inputDateModified = LocalDateTime.now()
                     inputPageRead.setText("${itemData.pagesRead}")
 
                     builder.setCancelable(false)
 
                     builder.setPositiveButton("Update details") { dialog, _ ->
                         val newPage = inputPageRead.text.toString().toInt()
+                        val newDateModified = inputDateModified.toString()
 
                         if (newPage > itemData.pages || (newPage.toString().isNullOrEmpty() || newPage.toString().isNullOrBlank())) {
                             Toast.makeText(context, "Book page read has been updated unsuccessfully. Please check again.", Toast.LENGTH_SHORT).show()
                             dialog.cancel()
                         } else {
-                            bookFaveAdapterCallback.updateBookStatus(itemData, newPage)
+                            bookFaveAdapterCallback.updateBookStatus(itemData, newDateModified, newPage)
                             Toast.makeText(context, "Book page read has been updated.", Toast.LENGTH_SHORT).show()
                             dialog.dismiss()
                         }
                     }
                     builder.setNegativeButton("Cancel") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    builder.show()
+                }
+
+                // Shows the full details of the book
+                btnSeeDetails.setOnClickListener {
+                    val builder = AlertDialog.Builder(context)
+                    val inflater = LayoutInflater.from(context)
+                    val view = inflater.inflate(R.layout.dialog_show_details_book, null)
+                    val bindingEdit = DialogShowDetailsBookBinding.bind(view)
+
+                    builder.setView(view)
+
+                    val inputTitle = bindingEdit.editBookTitleName
+                    val inputAuthor = bindingEdit.editBookTitleAuthor
+                    val inputPages = bindingEdit.editBookTitlePages
+                    val inputDatePublished = bindingEdit.editBookTitleDatePublished
+                    val inputDateModified = bindingEdit.editBookTitleDateModified
+                    val inputDateAdded = bindingEdit.editBookTitleDateAdded
+
+
+                    inputTitle.setText("${itemData.bookName}")
+                    inputAuthor.setText("${itemData.author}")
+                    inputDatePublished.setText("${itemData.dateBookPublished}")
+                    inputPages.setText("${itemData.pages}")
+                    inputDateModified.setText(convertedDateModified)
+                    inputDateAdded.setText(convertedDateAdded)
+
+                    builder.setCancelable(false)
+
+                    builder.setPositiveButton("Close") { dialog, _ ->
                         dialog.dismiss()
                     }
                     builder.show()

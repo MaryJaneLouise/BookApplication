@@ -48,8 +48,6 @@
         android:padding="10dp">
 
 
-        <!--on below line we are creating a home fab
-             and setting its visibility to gone-->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/id_fab_add"
             android:layout_width="wrap_content"

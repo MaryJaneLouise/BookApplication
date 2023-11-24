@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -22,105 +24,130 @@
             android:padding="20dp"
             android:orientation="vertical">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/book_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="15dp">
+                android:orientation="horizontal">
 
                 <LinearLayout
+                    android:id="@+id/book_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
                     <ImageView
                         android:id="@+id/pet_image"
                         android:layout_width="100dp"
                         android:layout_height="100dp"
-                        android:src="@drawable/ic_book"
-                        android:layout_marginEnd="15dp"/>
+                        android:src="@drawable/ic_book" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:id="@+id/linearLayout"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_alignParentTop="true"
+                    android:layout_toStartOf="@+id/button_fave_edit"
+                    android:layout_toEndOf="@+id/book_icon"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/book_icon"
+                    app:layout_constraintTop_toTopOf="parent">
+
                     <TextView
                         android:id="@+id/txt_book_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="20dp"
-                        android:text="Jerjerking Chronicles"/>
+                        android:text="Jerjerking "
+                        android:textSize="20dp" />
 
                     <TextView
                         android:id="@+id/txt_book_author"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Made by MaryJane Salsalani"/>
+                        android:text="MaryJane Salsalani" />
 
                     <TextView
                         android:id="@+id/txt_book_pages_read"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Page 69 of 96 (71.88% done)"/>
+                        android:text="Page 69 of 96 (71.88% done)" />
 
-                    <TextView
-                        android:id="@+id/txt_book_date_published"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="June 9, 1969"/>
-
-                    <TextView
-                        android:id="@+id/txt_book_date_modified"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Modified by 6/9/69"/>
                 </LinearLayout>
-            </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_fave_edit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <Button
+                        android:id="@+id/btn_fave"
+                        style="@style/IconButtons"
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        app:icon="@drawable/ic_favorite" />
+
+                    <Button
+                        android:id="@+id/btn_edit_book"
+                        style="@style/IconButtons"
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:gravity="end"
+                        app:icon="@drawable/ic_edit" />
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
+                android:id="@+id/btn_update_archive"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingTop="8dp"
+                android:layout_marginBottom="8dp">
 
                 <Button
-                    android:id="@+id/btn_fave"
+                    android:id="@+id/btn_update_pages_read"
+                    app:icon="@drawable/ic_edit"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="5dp"
                     android:layout_marginEnd="5dp"
-                    android:text="Fave" />
-
-                <Button
-                    android:id="@+id/btn_edit_book"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginEnd="5dp"
-                    android:text="Edit" />
+                    android:text="Update page" />
 
                 <Button
                     android:id="@+id/btn_remove"
+                    app:icon="@drawable/ic_archive"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:backgroundTint="#F44336"
                     android:layout_marginStart="5dp"
                     android:layout_marginEnd="5dp"
-                    android:text="Remove" />
+                    android:text="Archive book" />
 
             </LinearLayout>
 
             <Button
-                android:id="@+id/btn_update_pages_read"
+                android:id="@+id/btn_see_details"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_marginStart="5dp"
                 android:layout_marginEnd="5dp"
-                android:text="Update pages read" />
+                android:text="See full details" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

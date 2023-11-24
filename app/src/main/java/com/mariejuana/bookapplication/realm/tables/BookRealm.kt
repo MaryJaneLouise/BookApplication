@@ -10,8 +10,8 @@ class BookRealm : RealmObject {
     var author: String = ""
     var bookName: String = ""
     var dateBookPublished: String = ""
-    var dateAdded: Long? = null
-    var dateModified: Long? = null
+    var dateAdded: String = ""
+    var dateModified: String = ""
     var pages: Int = 0
     var pagesRead: Int = 0
     var isFavorite: Boolean = false

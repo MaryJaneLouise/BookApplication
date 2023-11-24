@@ -12,6 +12,8 @@ import org.mongodb.kbson.ObjectId
 import java.lang.IllegalStateException
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.Date
 
 class RealmDatabase {
     private val realm: Realm by lazy {
@@ -34,7 +36,7 @@ class RealmDatabase {
 
     // Gets the list of the favorite books
     fun getAllBooksArchived(): List<BookRealm> {
-        return realm.query<BookRealm>("archived == true").find()
+        return realm.query<BookRealm>("archived == true AND isFavorite == false").find()
     }
 
     // Search query for the books
@@ -54,8 +56,8 @@ class RealmDatabase {
                     this.author = author
                     this.bookName = bookName
                     this.dateBookPublished = datePublished
-                    this.dateAdded = LocalDate.now().toEpochDay()
-                    this.dateModified = LocalDate.now().toEpochDay()
+                    this.dateAdded = LocalDateTime.now().toString()
+                    this.dateModified = LocalDateTime.now().toString()
                     this.pagesRead = 0
                     this.pages = pages
                     this.isFavorite = false
@@ -100,6 +102,7 @@ class RealmDatabase {
 
                 if (book != null) {
                     findLatest(book)?.archived = true
+                    findLatest(book)?.isFavorite = false
                 }
             }
         }
@@ -118,12 +121,28 @@ class RealmDatabase {
         }
     }
 
+    // Unarchive all the books
+    suspend fun unarchiveAllBook() {
+        withContext(Dispatchers.IO) {
+            realm.write {
+                val books = realm.query<BookRealm>("archived == true AND isFavorite == false").find()
+
+                for (book in books) {
+                    findLatest(book)?.archived = false
+                    findLatest(book)?.isFavorite = false
+                }
+            }
+        }
+    }
+
+
     // Update the book
     suspend fun updateBook(
         book: Book,
         author: String,
         bookName: String,
         datePublished: String,
+        dateModified: String,
         pages: Int) {
         withContext(Dispatchers.IO) {
             realm.write {
@@ -138,7 +157,7 @@ class RealmDatabase {
                         this.bookName = bookName
                         this.dateBookPublished = datePublished
                         this.pages = pages
-                        this.dateModified = LocalDate.now().toEpochDay()
+                        this.dateModified = dateModified
                     }
                 }
             }
@@ -146,7 +165,7 @@ class RealmDatabase {
     }
 
     // Update the book status
-    suspend fun updateBookStatus(book: Book, pagesRead: Int) {
+    suspend fun updateBookStatus(book: Book, dateModified: String, pagesRead: Int) {
         withContext(Dispatchers.IO) {
             realm.write {
                 val book: BookRealm? = realm.query<BookRealm>("id == $0", ObjectId(book.id)).first().find()
@@ -157,7 +176,7 @@ class RealmDatabase {
                     // Update the data
                     bookRealm?.apply {
                         this.pagesRead = pagesRead
-                        this.dateModified = LocalDate.now().toEpochDay()
+                        bookRealm.dateModified = dateModified
                     }
                 }
             }
@@ -176,4 +195,18 @@ class RealmDatabase {
             }
         }
     }
+
+    // Delete all books in archive
+    suspend fun deleteAllBooksInArchive() {
+        withContext(Dispatchers.IO) {
+            realm.write {
+                realm.query<BookRealm>("archived == true AND isFavorite == false")
+                    .find()
+                    ?. let { deleteAll() }
+                    ?: throw IllegalStateException("Book not found")
+            }
+        }
+    }
+
+
 }

@@ -30,6 +30,7 @@ class BooksArchivedActivity : AppCompatActivity(), BookArchivedAdapter.BookArchi
     private lateinit var adapter: BookArchivedAdapter
 
     private var database = RealmDatabase()
+    private var fabVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +45,75 @@ class BooksArchivedActivity : AppCompatActivity(), BookArchivedAdapter.BookArchi
         val layoutManager = LinearLayoutManager(this)
         binding.rvBooksArchived.layoutManager = layoutManager
         binding.rvBooksArchived.adapter = adapter
+
+        fabVisible = false
+
+        binding.idFabOptions.setOnClickListener {
+            if (!fabVisible) {
+                binding.idFabUnarchive.show()
+                binding.idFabDelete.show()
+
+                binding.idFabUnarchive.visibility = View.VISIBLE
+                binding.idFabDelete.visibility = View.VISIBLE
+
+                binding.idFabOptions.setImageDrawable(resources.getDrawable(R.drawable.ic_close))
+
+                fabVisible = true
+            } else {
+                binding.idFabUnarchive.hide()
+                binding.idFabDelete.hide()
+
+                binding.idFabUnarchive.visibility = View.GONE
+                binding.idFabDelete.visibility = View.GONE
+
+                binding.idFabOptions.setImageDrawable(resources.getDrawable(R.drawable.ic_options))
+
+                fabVisible = false
+            }
+        }
+
+        binding.idFabUnarchive.setOnClickListener {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Are you sure you want to unarchive all of the books?")
+            builder.setTitle("Warning!")
+            builder.setPositiveButton("Yes") { dialog, _ ->
+                if (bookArchivedList.size > 0) {
+                    unarchiveAllBook()
+                    getArchivedBooks()
+                    Toast.makeText(this, "All of the books have been unarchived.", Toast.LENGTH_SHORT).show()
+                } else {
+                    getArchivedBooks()
+                    Toast.makeText(this, "There is no books to be unarchived.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            builder.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            builder.show()
+        }
+
+        binding.idFabDelete.setOnClickListener {
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Are you sure you want to delete all of the books?")
+            builder.setTitle("Warning!")
+            builder.setPositiveButton("Yes") { dialog, _ ->
+                if (bookArchivedList.size > 0) {
+                    deleteAllBook()
+                    getArchivedBooks()
+                    Toast.makeText(this, "All of the books have been deleted.", Toast.LENGTH_SHORT).show()
+                } else {
+                    getArchivedBooks()
+                    Toast.makeText(this, "There is no books to be deleted.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+
+            }
+            builder.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            builder.show()
+        }
 
         binding.idAllBookSearchArchived.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -108,6 +178,16 @@ class BooksArchivedActivity : AppCompatActivity(), BookArchivedAdapter.BookArchi
     override fun onResume() {
         super.onResume()
         getArchivedBooks()
+
+        binding.idFabUnarchive.hide()
+        binding.idFabDelete.hide()
+
+        binding.idFabUnarchive.visibility = View.GONE
+        binding.idFabDelete.visibility = View.GONE
+
+        binding.idFabOptions.setImageDrawable(resources.getDrawable(R.drawable.ic_options))
+
+        fabVisible = false
     }
 
     override fun deleteBook(id: String) {
@@ -115,6 +195,15 @@ class BooksArchivedActivity : AppCompatActivity(), BookArchivedAdapter.BookArchi
         val scope = CoroutineScope(coroutineContext + CoroutineName("deleteBook"))
         scope.launch(Dispatchers.IO) {
             database.deleteBook(BsonObjectId(id))
+            getArchivedBooks()
+        }
+    }
+
+    override fun deleteAllBook() {
+        val coroutineContext = Job() + Dispatchers.IO
+        val scope = CoroutineScope(coroutineContext + CoroutineName("deleteAllBook"))
+        scope.launch(Dispatchers.IO) {
+            database.deleteAllBooksInArchive()
             getArchivedBooks()
         }
     }
@@ -128,14 +217,23 @@ class BooksArchivedActivity : AppCompatActivity(), BookArchivedAdapter.BookArchi
         }
     }
 
+    override fun unarchiveAllBook() {
+        val coroutineContext = Job() + Dispatchers.IO
+        val scope = CoroutineScope(coroutineContext + CoroutineName("unArchiveAllBook"))
+        scope.launch(Dispatchers.IO) {
+            database.unarchiveAllBook()
+            getArchivedBooks()
+        }
+    }
+
     private fun mapBook(book: BookRealm): Book {
         return Book(
             id = book.id.toHexString(),
             author = book.author,
             bookName = book.bookName,
             dateBookPublished = book.dateBookPublished,
-            dateAdded = book.dateAdded.toString(),
-            dateModified = book.dateModified.toString(),
+            dateAdded = book.dateAdded,
+            dateModified = book.dateModified,
             pages = book.pages,
             pagesRead = book.pagesRead,
             isFavorite = book.isFavorite,

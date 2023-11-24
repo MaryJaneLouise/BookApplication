@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Locale
 
@@ -99,21 +100,20 @@ class AddBookDialog : DialogFragment() {
     private fun showDatePicker() {
         val datePickerDialog = DatePickerDialog(
             requireContext(), { DatePicker, year: Int, monthOfYear: Int, dayOfMonth: Int ->
-                // Create a new Calendar instance to hold the selected date
                 val selectedDate = Calendar.getInstance()
-                // Set the selected date using the values received from the DatePicker dialog
                 selectedDate.set(year, monthOfYear, dayOfMonth)
-                // Create a SimpleDateFormat to format the date as "dd/MM/yyyy"
+
                 val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                // Format the selected date into a string
                 val formattedDate = dateFormat.format(selectedDate.time)
-                // Update the TextView to display the selected date with the "Selected Date: " prefix
+
                 binding.editBookTitleDatePublished.setText(formattedDate)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+
+        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
         // Show the DatePicker dialog
         datePickerDialog.show()
     }
