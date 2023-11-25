@@ -200,10 +200,11 @@ class RealmDatabase {
     suspend fun deleteAllBooksInArchive() {
         withContext(Dispatchers.IO) {
             realm.write {
-                realm.query<BookRealm>("archived == true AND isFavorite == false")
-                    .find()
-                    ?. let { deleteAll() }
-                    ?: throw IllegalStateException("Book not found")
+                val books = realm.query<BookRealm>("archived == true AND isFavorite == false").find()
+
+                for (book in books) {
+                    delete(findLatest(book)!!)
+                }
             }
         }
     }
