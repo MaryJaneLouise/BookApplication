@@ -46,7 +46,9 @@ class BookAdapter(private var bookList: ArrayList<Book>, private var context: Co
     inner class BookViewHolder(val binding: ContentBooksBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(itemData: Book) {
             with(binding) {
-                val percentage = (itemData.pagesRead.toString().toDouble() / itemData.pages.toString().toDouble()) * 100
+                val pagesReadToString = itemData.pagesRead.toString().toDouble()
+                val pagesMaxString = itemData.pages.toString().toDouble()
+                val percentage = ( pagesReadToString / pagesMaxString ) * 100
 
                 val convertedDateAdded = typeConverter.toFormattedDateTimeString(itemData.dateAdded)
                 val convertedDateModified = typeConverter.toFormattedDateTimeString(itemData.dateModified)
