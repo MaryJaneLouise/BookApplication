@@ -26,17 +26,17 @@ class RealmDatabase {
 
     // Gets the list of the books without the favorite and archived
     fun getAllBooks(): List<BookRealm> {
-        return realm.query<BookRealm>("isFavorite == false AND archived == false").find()
+        return realm.query<BookRealm>().find().filter { book -> !book.archived && !book.isFavorite }
     }
 
     // Gets the list of the favorite books
     fun getAllBooksFavorite(): List<BookRealm> {
-        return realm.query<BookRealm>("isFavorite == true").find()
+        return realm.query<BookRealm>().find().filter { book -> !book.archived && book.isFavorite }
     }
 
     // Gets the list of the favorite books
     fun getAllBooksArchived(): List<BookRealm> {
-        return realm.query<BookRealm>("archived == true AND isFavorite == false").find()
+        return realm.query<BookRealm>().find().filter { book -> book.archived && !book.isFavorite }
     }
 
     // Search query for the books
@@ -125,7 +125,7 @@ class RealmDatabase {
     suspend fun unarchiveAllBook() {
         withContext(Dispatchers.IO) {
             realm.write {
-                val books = realm.query<BookRealm>("archived == true AND isFavorite == false").find()
+                val books = realm.query<BookRealm>().find().filter { book -> book.archived && !book.isFavorite }
 
                 for (book in books) {
                     findLatest(book)?.archived = false
@@ -200,7 +200,7 @@ class RealmDatabase {
     suspend fun deleteAllBooksInArchive() {
         withContext(Dispatchers.IO) {
             realm.write {
-                val books = realm.query<BookRealm>("archived == true AND isFavorite == false").find()
+                val books = realm.query<BookRealm>().find().filter { book -> book.archived && !book.isFavorite }
 
                 for (book in books) {
                     delete(findLatest(book)!!)

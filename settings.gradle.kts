@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Book Application"
+rootProject.name = "PageKeeper"
 include(":app")
  
